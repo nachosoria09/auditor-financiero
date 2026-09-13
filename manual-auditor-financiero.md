@@ -93,18 +93,22 @@ function salida_(obj) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+function cargarTodo_(usuario) {
+  var movimientos = filasComoObjetos_(hojaMovimientos_(), ['ID','Usuario','Fecha','Tipo','Categoria','Monto','Nota'])
+    .filter(function (m) { return m.Usuario === usuario; });
+  var prestamos = filasComoObjetos_(hojaPrestamos_(), ['Usuario','Nombre','Cuota','Actual','Total'])
+    .filter(function (p) { return p.Usuario === usuario; });
+  var categorias = filasComoObjetos_(hojaCategorias_(), ['Usuario','Tipo','Nombre'])
+    .filter(function (c) { return c.Usuario === usuario; });
+  return { ok: true, movimientos: movimientos, prestamos: prestamos, categorias: categorias };
+}
+
 function doGet(e) {
   var accion = e.parameter.accion;
   var usuario = e.parameter.usuario;
 
   if (accion === 'cargarTodo') {
-    var movimientos = filasComoObjetos_(hojaMovimientos_(), ['ID','Usuario','Fecha','Tipo','Categoria','Monto','Nota'])
-      .filter(function (m) { return m.Usuario === usuario; });
-    var prestamos = filasComoObjetos_(hojaPrestamos_(), ['Usuario','Nombre','Cuota','Actual','Total'])
-      .filter(function (p) { return p.Usuario === usuario; });
-    var categorias = filasComoObjetos_(hojaCategorias_(), ['Usuario','Tipo','Nombre'])
-      .filter(function (c) { return c.Usuario === usuario; });
-    return salida_({ ok: true, movimientos: movimientos, prestamos: prestamos, categorias: categorias });
+    return salida_(cargarTodo_(usuario));
   }
 
   return salida_({ ok: false, error: 'accion desconocida' });
@@ -113,6 +117,14 @@ function doGet(e) {
 function doPost(e) {
   var datos = JSON.parse(e.postData.contents);
   var accion = datos.accion;
+
+  // Nota: 'cargarTodo' se maneja acá (por POST) y no solo en doGet,
+  // porque los navegadores bloquean por CORS la lectura de la respuesta
+  // de un GET hecho desde otro sitio (ej. GitHub Pages). El POST con
+  // Content-Type text/plain no tiene ese problema.
+  if (accion === 'cargarTodo') {
+    return salida_(cargarTodo_(datos.usuario));
+  }
 
   if (accion === 'agregarMovimiento') {
     hojaMovimientos_().appendRow([
@@ -174,6 +186,18 @@ function doPost(e) {
 7. Al final te va a aparecer un cuadro con un texto largo que empieza con `https://` y termina en `/exec`. **Ese es tu enlace** — copialo tal cual, con el botón de copiar que aparece al lado.
 
 Guardalo, lo vas a necesitar en el paso 4.
+
+### Si en algún momento te paso una versión corregida del código
+
+A veces hay que corregir algo del código de Apps Script (por ejemplo, arreglar un error que apareció). Para que el enlace que ya guardaste **siga funcionando igual**, no crees una implementación nueva — actualizá la que ya existe:
+
+1. En el editor de Apps Script, pegá el código nuevo reemplazando todo el anterior (borrá todo, pegá de nuevo, guardá).
+2. Arriba a la derecha, **Implementar → Administrar implementaciones**.
+3. Vas a ver la implementación que ya existe — click en el ícono de lápiz (editar) al lado.
+4. En "Versión", elegí **Nueva versión**.
+5. Click en **Implementar**.
+
+Con esto el enlace que ya tenés guardado no cambia — solo se actualiza el código que hay detrás.
 
 ---
 

@@ -441,7 +441,11 @@ function showToast(msg){
 // ==== Comunicación con la planilla (Google Apps Script) ====
 
 async function cargarTodo(){
-  const res = await fetch(SCRIPT_URL + "?accion=cargarTodo&usuario=" + encodeURIComponent(currentUser));
+  const res = await fetch(SCRIPT_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" }, // evita el bloqueo de CORS que da el GET
+    body: JSON.stringify({ accion: "cargarTodo", usuario: currentUser })
+  });
   const data = await res.json();
   if(!data || !data.ok) throw new Error("respuesta invalida");
 
