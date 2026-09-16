@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auditor Financiero Personal</title>
+<style>
+  :root{
+    --paper: #EDE6D6;
+    --paper-line: #D8CDB4;
+    --ink: #1F2B22;
+    --ink-soft: #55604F;
+    --forest: #1F3D2E;
+    --forest-soft: #35573F;
+    --rust: #8B3A2F;
+    --gold: #A9822F;
+    --card: #F5F1E4;
+    --mono: 'IBM Plex Mono', 'SFMono-Regular', monospace;
+    --serif: 'Source Serif 4', Georgia, serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;padding:0;background:var(--paper);}
+  .book{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--serif);
+    padding:28px 20px 60px;
+    min-height:100%;
+  }
+  h1{
+    font-family:var(--serif);
+    font-size:28px;
+    font-weight:600;
+    margin:0 0 2px 0;
+    letter-spacing:0.2px;
+  }
+  .subtitle{
+    color:var(--ink-soft);
+    font-size:13px;
+    margin-bottom:6px;
+  }
+  .toprow{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .month-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:24px;
+    flex-wrap:wrap;
+  }
+  .month-row input[type=month]{
+    font-family:var(--mono);
+    font-size:13px;
+    padding:6px 8px;
+    border:1px solid var(--paper-line);
+    background:var(--card);
+    color:var(--ink);
+    border-radius:2px;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:18px;
+  }
+  @media(min-width:860px){
+    .grid{grid-template-columns:1.1fr 0.9fr;}
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--paper-line);
+    border-radius:3px;
+    padding:18px 18px 16px;
+  }
+  .card h2{
+    font-size:14px;
+    margin:0 0 12px 0;
+    color:var(--forest);
+    font-weight:700;
+    border-bottom:1px solid var(--paper-line);
+    padding-bottom:8px;
+  }
+  form.entry{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  form.entry .full{grid-column:1/-1;}
+  label{
+    font-size:11px;
+    color:var(--ink-soft);
+    display:block;
+    margin-bottom:3px;
+  }
+  select, input[type=number], input[type=text]{
+    width:100%;
+    font-family:var(--mono);
+    font-size:13px;
+    padding:7px 8px;
+    border:1px solid var(--paper-line);
+    background:#fff;
+    color:var(--ink);
+    border-radius:2px;
+  }
+  .btn{
+    font-family:var(--mono);
+    font-size:12.5px;
+    background:var(--forest);
+    color:#fff;
+    border:none;
+    padding:9px 14px;
+    border-radius:2px;
+    cursor:pointer;
+    letter-spacing:0.3px;
+  }
+  .btn:hover{background:var(--forest-soft);}
+  .btn.secondary{
+    background:transparent;
+    color:var(--forest);
+    border:1px solid var(--forest);
+  }
+  .btn.secondary:hover{background:rgba(31,61,46,0.06);}
+  .btn.small{padding:5px 9px;font-size:11px;}
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-family:var(--mono);
+    font-size:12.5px;
+  }
+  table th{
+    text-align:left;
+    font-weight:600;
+    color:var(--ink-soft);
+    border-bottom:1px solid var(--paper-line);
+    padding:6px 4px;
+  }
+  table td{
+    border-bottom:1px solid var(--paper-line);
+    padding:6px 4px;
+    vertical-align:top;
+  }
+  .amt-in{color:var(--forest);font-weight:600;}
+  .amt-out{color:var(--rust);font-weight:600;}
+  .empty{
+    color:var(--ink-soft);
+    font-size:12.5px;
+    font-style:italic;
+    padding:8px 0;
+  }
+  .loan-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px 0;
+    border-bottom:1px solid var(--paper-line);
+  }
+  .loan-row:last-child{border-bottom:none;}
+  .loan-name{font-weight:600;font-size:13px;}
+  .loan-meta{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);}
+  .summary-line{
+    display:flex;
+    justify-content:space-between;
+    padding:6px 0;
+    font-family:var(--mono);
+    font-size:13px;
+    border-bottom:1px dashed var(--paper-line);
+  }
+  .summary-line:last-child{border-bottom:none;}
+  .summary-line .val{font-weight:700;}
+  .saldo-pos{color:var(--forest);}
+  .saldo-neg{color:var(--rust);}
+  .add-loan-row{
+    display:grid;
+    grid-template-columns:1fr 80px 60px 60px auto;
+    gap:6px;
+    margin-top:10px;
+  }
+  .report{
+    margin-top:24px;
+    background:var(--card);
+    border:1px solid var(--paper-line);
+    border-radius:3px;
+    padding:20px;
+    display:none;
+  }
+  .report.show{display:block;}
+  .report h2{
+    font-family:var(--serif);
+    font-size:20px;
+    color:var(--forest);
+    margin:0 0 4px 0;
+  }
+  .report .rmonth{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-bottom:16px;
+  }
+  .report section{margin-bottom:18px;}
+  .report h3{
+    font-size:12.5px;
+    color:var(--gold);
+    text-transform:uppercase;
+    letter-spacing:0.6px;
+    font-weight:700;
+    margin:0 0 8px 0;
+  }
+  .critique{
+    background:#fff;
+    border-left:3px solid var(--rust);
+    padding:12px 14px;
+    font-family:var(--serif);
+    font-size:14px;
+    line-height:1.55;
+    color:var(--ink);
+  }
+  .toast{
+    position:fixed;
+    bottom:16px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--forest);
+    color:#fff;
+    padding:8px 16px;
+    border-radius:3px;
+    font-family:var(--mono);
+    font-size:12px;
+    opacity:0;
+    transition:opacity 0.25s;
+    pointer-events:none;
+    max-width:90%;
+    text-align:center;
+    z-index:999;
+  }
+  .toast.show{opacity:1;}
+  .del{
+    color:var(--rust);
+    cursor:pointer;
+    font-family:var(--mono);
+    font-size:11px;
+    background:none;
+    border:none;
+    padding:0;
+  }
+  .backup-note{
+    font-family:var(--serif);
+    font-size:12.5px;
+    color:var(--ink-soft);
+    line-height:1.5;
+    margin-top:8px;
+  }
+  #importFile{display:none;}
+</style>
+</head>
+<body>
+<div class="book">
+  <div class="toprow">
+    <div>
+      <h1>Libro Mayor Personal</h1>
+      <div class="subtitle">Auditor financiero &mdash; pesos uruguayos (UYU)</div>
+    </div>
+    <a href="./manual.html" style="font-family:var(--mono);font-size:12px;color:var(--forest);">📄 Manual de Usuario</a>
+  </div>
+
+  <div class="month-row">
+    <label style="margin:0;">Mes</label>
+    <input type="month" id="monthPicker">
+    <button class="btn secondary small" id="auditBtn">Generar Auditoría</button>
+    <button class="btn secondary small" id="exportBtn">⬇ Descargar mis datos</button>
+    <button class="btn secondary small" id="importBtn">⬆ Restaurar desde archivo</button>
+    <input type="file" id="importFile" accept="application/json">
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Registrar movimiento</h2>
+      <form class="entry" id="entryForm">
+        <div>
+          <label>Tipo</label>
+          <select id="type">
+            <option value="ingreso">Ingreso</option>
+            <option value="gasto">Gasto</option>
+            <option value="ahorro">Ahorro (alcancía)</option>
+          </select>
+        </div>
+        <div>
+          <label>Categoría</label>
+          <select id="category"></select>
+        </div>
+        <div>
+          <label>Monto (UYU)</label>
+          <input type="number" id="amount" min="0" step="1">
+        </div>
+        <div>
+          <label>Nota (opcional)</label>
+          <input type="text" id="note" placeholder="ej: nafta, tabaco...">
+        </div>
+        <div class="full">
+          <button type="submit" class="btn">Agregar</button>
+        </div>
+      </form>
+
+      <div style="margin-top:18px;">
+        <table id="entryTable">
+          <thead><tr><th>Fecha</th><th>Cat.</th><th>Nota</th><th style="text-align:right;">Monto</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty" id="emptyMsg" style="display:none;">Sin movimientos este mes todavía.</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>Saldo del mes</h2>
+        <div class="summary-line"><span>Ingresos totales</span><span class="val amt-in" id="sumIn">0</span></div>
+        <div class="summary-line"><span>Gastos totales</span><span class="val amt-out" id="sumOut">0</span></div>
+        <div class="summary-line"><span>Aportado a alcancía</span><span class="val" id="sumPig">0</span></div>
+        <div class="summary-line"><span>Saldo disponible</span><span class="val" id="sumSaldo">0</span></div>
+        <div class="summary-line"><span>Alcancía acumulada (total)</span><span class="val" id="pigTotal">0</span></div>
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <h2>Préstamos fijos</h2>
+        <div id="loansList"></div>
+        <div class="add-loan-row">
+          <input type="text" id="loanName" placeholder="Nombre (ej: Auto)">
+          <input type="number" id="loanCuota" placeholder="Cuota $">
+          <input type="number" id="loanCur" placeholder="Actual">
+          <input type="number" id="loanTot" placeholder="Total">
+          <button class="btn small" id="addLoanBtn">+</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <h2>Mis categorías</h2>
+        <div id="categoriesList"></div>
+        <div class="add-loan-row" style="grid-template-columns:1fr 110px auto;">
+          <input type="text" id="newCatName" placeholder="Nombre (ej: Gastos de trabajo)">
+          <select id="newCatType">
+            <option value="gasto">Gasto</option>
+            <option value="ingreso">Ingreso</option>
+            <option value="ahorro">Ahorro</option>
+          </select>
+          <button class="btn small" id="addCatBtn">+</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <h2>Respaldo de tus datos</h2>
+        <p class="backup-note">
+          Tus datos viven solo en este navegador, en este dispositivo. Si cambiás de celular/computadora, o querés estar tranquilo por si algo se borra, usá "Descargar mis datos" (arriba) para guardar un archivo, y "Restaurar desde archivo" para volver a cargarlo cuando lo necesites.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="report" id="report"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DEFAULT_CATS = {
+  ingreso: ["Sueldo Mensual", "Viáticos"],
+  gasto: [
+    "Alquiler / Cuentas del hogar (luz, agua, gas, internet)",
+    "Tarjeta de Crédito",
+    "Auto - Nafta/Mantenimiento",
+    "Alimentos y Agua",
+    "Bebidas (azucaradas/alcohólicas)",
+    "Tabaco",
+    "Higiene y Limpieza",
+    "Compras Varias",
+    "Obligaciones Familiares",
+    "Gastos Varios"
+  ],
+  ahorro: ["Alcancía"]
+};
+
+const fmt = n => "$ " + Math.round(n).toLocaleString("es-UY");
+function todayMonth(){
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0");
+}
+function todayISO(){
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+function idNuevo(){
+  return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,8);
+}
+
+let currentMonth = todayMonth();
+let allMovements = [];
+let allLoans = [];
+let categories = { ingreso: [], gasto: [], ahorro: [] };
+let piggyTotal = 0;
+
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+// ==== IndexedDB: capa de almacenamiento local ====
+const DB_NAME = "AuditorFinancieroDB";
+const DB_VERSION = 1;
+let dbPromise = null;
+
+function abrirDB(){
+  if(dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve, reject)=>{
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (ev)=>{
+      const db = ev.target.result;
+      if(!db.objectStoreNames.contains("movimientos")) db.createObjectStore("movimientos", { keyPath: "id" });
+      if(!db.objectStoreNames.contains("prestamos")) db.createObjectStore("prestamos", { keyPath: "name" });
+      if(!db.objectStoreNames.contains("categorias")) db.createObjectStore("categorias", { keyPath: "key" });
+    };
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+  return dbPromise;
+}
+
+function storeGetAll(storeName){
+  return abrirDB().then(db => new Promise((resolve, reject)=>{
+    const tx = db.transaction(storeName, "readonly");
+    const store = tx.objectStore(storeName);
+    const req = store.getAll();
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  }));
+}
+function storePut(storeName, value){
+  return abrirDB().then(db => new Promise((resolve, reject)=>{
+    const tx = db.transaction(storeName, "readwrite");
+    tx.objectStore(storeName).put(value);
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = ()=> reject(tx.error);
+  }));
+}
+function storeDelete(storeName, key){
+  return abrirDB().then(db => new Promise((resolve, reject)=>{
+    const tx = db.transaction(storeName, "readwrite");
+    tx.objectStore(storeName).delete(key);
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = ()=> reject(tx.error);
+  }));
+}
+function storeClear(storeName){
+  return abrirDB().then(db => new Promise((resolve, reject)=>{
+    const tx = db.transaction(storeName, "readwrite");
+    tx.objectStore(storeName).clear();
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = ()=> reject(tx.error);
+  }));
+}
+
+async function cargarTodo(){
+  allMovements = await storeGetAll("movimientos");
+  allLoans = (await storeGetAll("prestamos")).map(p => ({
+    name: p.name, cuota: p.cuota, current: p.current, total: p.total
+  }));
+
+  const catRows = await storeGetAll("categorias");
+  categories = { ingreso: [], gasto: [], ahorro: [] };
+  catRows.forEach(r => categories[r.tipo] && categories[r.tipo].push(r.nombre) );
+  if(catRows.length === 0){
+    categories = JSON.parse(JSON.stringify(DEFAULT_CATS));
+    await guardarCategorias();
+  }
+
+  piggyTotal = allMovements.filter(m => m.tipo === "ahorro").reduce((s,m)=>s+m.monto, 0);
+}
+
+async function agregarMovimiento(mov){
+  await storePut("movimientos", mov);
+}
+async function eliminarMovimiento(id){
+  await storeDelete("movimientos", id);
+}
+async function guardarPrestamos(){
+  await storeClear("prestamos");
+  for(const l of allLoans){
+    await storePut("prestamos", { name: l.name, cuota: l.cuota, current: l.current, total: l.total });
+  }
+}
+async function guardarCategorias(){
+  await storeClear("categorias");
+  for(const tipo of ["ingreso","gasto","ahorro"]){
+    for(const nombre of (categories[tipo]||[])){
+      await storePut("categorias", { key: tipo + ":" + nombre, tipo, nombre });
+    }
+  }
+}
+
+// ==== Vistas derivadas ====
+function entriesForMonth(m){
+  return allMovements.filter(mv => (mv.fecha || "").slice(0,7) === m);
+}
+
+function populateCategories(){
+  const type = document.getElementById("type").value;
+  const sel = document.getElementById("category");
+  sel.innerHTML = "";
+  (categories[type]||[]).forEach(c=>{
+    const o = document.createElement("option");
+    o.value = c; o.textContent = c;
+    sel.appendChild(o);
+  });
+}
+
+function renderCategories(){
+  const el = document.getElementById("categoriesList");
+  const typeLabel = { ingreso: "Ingreso", gasto: "Gasto", ahorro: "Ahorro" };
+  let rows = "";
+  ["ingreso","gasto","ahorro"].forEach(t=>{
+    (categories[t]||[]).forEach((c, idx)=>{
+      rows += `<div class="loan-row">
+        <div><div class="loan-name" style="font-size:12.5px;">${c}</div><div class="loan-meta">${typeLabel[t]}</div></div>
+        <button class="del" data-type="${t}" data-idx="${idx}">✕</button>
+      </div>`;
+    });
+  });
+  el.innerHTML = rows || '<div class="empty">Sin categorías propias todavía.</div>';
+  el.querySelectorAll("button.del").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const t = btn.dataset.type, i = parseInt(btn.dataset.idx);
+      categories[t].splice(i,1);
+      await guardarCategorias();
+      renderCategories();
+      populateCategories();
+      showToast("Categoría eliminada.");
+    });
+  });
+}
+
+function renderEntries(){
+  const tbody = document.querySelector("#entryTable tbody");
+  tbody.innerHTML = "";
+  const entries = entriesForMonth(currentMonth).slice().sort((a,b)=> (a.fecha||"").localeCompare(b.fecha||""));
+  const empty = document.getElementById("emptyMsg");
+  if(!entries.length){ empty.style.display="block"; } else { empty.style.display="none"; }
+  entries.forEach(e=>{
+    const tr = document.createElement("tr");
+    const isIn = e.tipo === "ingreso";
+    const diaCorto = (e.fecha||"").slice(8,10) + "/" + (e.fecha||"").slice(5,7);
+    tr.innerHTML = `<td>${diaCorto}</td><td>${e.categoria}</td><td>${e.nota||""}</td>
+      <td style="text-align:right;" class="${isIn?'amt-in':'amt-out'}">${isIn?"+":"-"}${fmt(e.monto)}</td>
+      <td><button class="del" data-id="${e.id}">✕</button></td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll(".del").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      btn.disabled = true;
+      await eliminarMovimiento(btn.dataset.id);
+      await cargarTodo();
+      renderEntries();
+      renderSummary();
+      showToast("Movimiento eliminado.");
+    });
+  });
+}
+
+function renderSummary(){
+  let inTotal=0, outTotal=0, pigTotalMes=0;
+  entriesForMonth(currentMonth).forEach(e=>{
+    if(e.tipo==="ingreso") inTotal += e.monto;
+    else if(e.tipo==="gasto") outTotal += e.monto;
+    else if(e.tipo==="ahorro") pigTotalMes += e.monto;
+  });
+  document.getElementById("sumIn").textContent = fmt(inTotal);
+  document.getElementById("sumOut").textContent = fmt(outTotal);
+  document.getElementById("sumPig").textContent = fmt(pigTotalMes);
+  const saldo = inTotal - outTotal;
+  const saldoEl = document.getElementById("sumSaldo");
+  saldoEl.textContent = fmt(saldo);
+  saldoEl.className = "val " + (saldo>=0?"saldo-pos":"saldo-neg");
+  document.getElementById("pigTotal").textContent = fmt(piggyTotal);
+}
+
+function renderLoans(){
+  const el = document.getElementById("loansList");
+  if(!allLoans.length){
+    el.innerHTML = '<div class="empty">Sin préstamos cargados.</div>';
+    return;
+  }
+  el.innerHTML = "";
+  allLoans.forEach((l, idx)=>{
+    const div = document.createElement("div");
+    div.className = "loan-row";
+    const done = l.current >= l.total;
+    div.innerHTML = `<div>
+        <div class="loan-name">${l.name}</div>
+        <div class="loan-meta">Cuota ${l.current} de ${l.total} &middot; ${fmt(l.cuota)}/mes${done?" &middot; PAGADO":""}</div>
+      </div>
+      <button class="btn small" data-idx="${idx}" ${done?"disabled":""}>${done?"Pagado":"Registrar pago"}</button>`;
+    el.appendChild(div);
+  });
+  el.querySelectorAll("button[data-idx]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const i = parseInt(btn.dataset.idx);
+      const l = allLoans[i];
+      if(l.current < l.total){
+        btn.disabled = true;
+        l.current += 1;
+        await guardarPrestamos();
+        await agregarMovimiento({
+          id: idNuevo(), fecha: todayISO(), tipo: "gasto",
+          categoria: "Deudas - Préstamos Fijos (" + l.name + ")",
+          monto: l.cuota, nota: "cuota " + l.current + "/" + l.total
+        });
+        await cargarTodo();
+        renderLoans();
+        renderEntries();
+        renderSummary();
+        showToast(l.name+": cuota "+l.current+" de "+l.total+" pagada");
+      }
+    });
+  });
+}
+
+document.getElementById("type").addEventListener("change", populateCategories);
+
+document.getElementById("entryForm").addEventListener("submit", async (ev)=>{
+  ev.preventDefault();
+  const tipo = document.getElementById("type").value;
+  const categoria = document.getElementById("category").value;
+  const monto = parseFloat(document.getElementById("amount").value);
+  const nota = document.getElementById("note").value.trim();
+  if(!monto || monto<=0){ showToast("Ingresá un monto válido."); return; }
+  const btn = ev.target.querySelector("button[type=submit]");
+  btn.disabled = true;
+  await agregarMovimiento({ id: idNuevo(), fecha: todayISO(), tipo, categoria, monto, nota });
+  await cargarTodo();
+  renderEntries();
+  renderSummary();
+  document.getElementById("amount").value="";
+  document.getElementById("note").value="";
+  btn.disabled = false;
+  showToast("Movimiento agregado.");
+});
+
+document.getElementById("addLoanBtn").addEventListener("click", async ()=>{
+  const name = document.getElementById("loanName").value.trim();
+  const cuota = parseFloat(document.getElementById("loanCuota").value);
+  const current = parseInt(document.getElementById("loanCur").value);
+  const total = parseInt(document.getElementById("loanTot").value);
+  if(!name || !cuota || isNaN(current) || !total){ showToast("Completá todos los campos del préstamo."); return; }
+  allLoans.push({name, cuota, current, total});
+  await guardarPrestamos();
+  renderLoans();
+  document.getElementById("loanName").value="";
+  document.getElementById("loanCuota").value="";
+  document.getElementById("loanCur").value="";
+  document.getElementById("loanTot").value="";
+  showToast("Préstamo agregado.");
+});
+
+document.getElementById("addCatBtn").addEventListener("click", async ()=>{
+  const name = document.getElementById("newCatName").value.trim();
+  const type = document.getElementById("newCatType").value;
+  if(!name){ showToast("Escribí un nombre para la categoría."); return; }
+  if(!categories[type]) categories[type] = [];
+  if(categories[type].includes(name)){ showToast("Ya existe esa categoría."); return; }
+  categories[type].push(name);
+  await guardarCategorias();
+  renderCategories();
+  populateCategories();
+  document.getElementById("newCatName").value = "";
+  showToast("Categoría agregada.");
+});
+
+document.getElementById("monthPicker").addEventListener("change", (ev)=>{
+  currentMonth = ev.target.value;
+  renderEntries();
+  renderSummary();
+  document.getElementById("report").classList.remove("show");
+});
+
+function buildCritique(inTotal, outTotal, saldo, vicePercent){
+  const lines = [];
+  if(saldo < 0){
+    lines.push("Gastaste más de lo que entró este mes. Esto no es un ajuste fino, es un problema de fondo: o generás más ingresos o cortás gastos ya, porque este ritmo no da para sostenerlo otro mes más.");
+  } else if(inTotal>0 && saldo/inTotal < 0.05){
+    lines.push("Cerraste el mes casi en cero. Técnicamente no estás en rojo, pero tampoco te queda margen para ningún imprevisto — estás viviendo mes a mes sin colchón.");
+  } else if(inTotal>0 && saldo/inTotal >= 0.2){
+    lines.push("Cerraste con un margen sólido este mes. Es un buen resultado, pero un mes bueno no es un hábito: falta ver si se repite.");
+  } else {
+    lines.push("El balance del mes es razonable, sin sobresaltos ni grandes logros. Cumpliste, ni más ni menos.");
+  }
+  if(vicePercent > 15){
+    lines.push(`Tabaco y bebidas se llevaron ${vicePercent.toFixed(1)}% de tus ingresos. Es una proporción alta para algo que no es una necesidad — si te preocupa el saldo, ahí hay margen real.`);
+  } else if(vicePercent > 8){
+    lines.push(`Tabaco y bebidas representaron ${vicePercent.toFixed(1)}% de tus ingresos. No es alarmante, pero es plata que notarías si la movieras a otro lado.`);
+  } else if(vicePercent > 0){
+    lines.push(`Tabaco y bebidas fueron solo ${vicePercent.toFixed(1)}% de tus ingresos — un gasto controlado, sin drama.`);
+  }
+  return lines.join(" ");
+}
+
+async function generateReport(){
+  const m = currentMonth;
+  const byCat = {};
+  let inTotal=0, outTotal=0, pigTotal=0, viceTotal=0;
+  entriesForMonth(m).forEach(e=>{
+    if(e.tipo==="ingreso"){ inTotal += e.monto; }
+    else if(e.tipo==="gasto"){
+      outTotal += e.monto;
+      byCat[e.categoria] = (byCat[e.categoria]||0) + e.monto;
+      if(e.categoria.includes("Tabaco") || e.categoria.includes("Bebidas")){
+        viceTotal += e.monto;
+      }
+    } else if(e.tipo==="ahorro"){
+      pigTotal += e.monto;
+    }
+  });
+  const saldo = inTotal - outTotal;
+  const vicePercent = inTotal>0 ? (viceTotal/inTotal*100) : 0;
+
+  let catRows = Object.entries(byCat).sort((a,b)=>b[1]-a[1])
+    .map(([c,v])=>`<tr><td>${c}</td><td style="text-align:right;">${fmt(v)}</td></tr>`).join("");
+  if(!catRows) catRows = '<tr><td colspan="2" class="empty">Sin gastos registrados.</td></tr>';
+
+  let loanRows = allLoans.map(l=>`<tr><td>${l.name}</td><td>${l.current} / ${l.total}</td><td style="text-align:right;">${fmt(l.cuota)}</td></tr>`).join("");
+  if(!loanRows) loanRows = '<tr><td colspan="3" class="empty">Sin préstamos cargados.</td></tr>';
+
+  const critique = buildCritique(inTotal, outTotal, saldo, vicePercent);
+
+  const html = `
+    <h2>Auditoría &mdash; ${m}</h2>
+    <div class="rmonth">Cierre generado sobre los movimientos cargados este mes</div>
+    <section>
+      <h3>Ingresos totales</h3>
+      <div class="summary-line"><span>Total</span><span class="val amt-in">${fmt(inTotal)}</span></div>
+    </section>
+    <section>
+      <h3>Gastos por categoría</h3>
+      <table><thead><tr><th>Categoría</th><th style="text-align:right;">Monto</th></tr></thead>
+      <tbody>${catRows}</tbody></table>
+    </section>
+    <section>
+      <h3>Estado de préstamos fijos</h3>
+      <table><thead><tr><th>Préstamo</th><th>Cuota</th><th style="text-align:right;">Monto</th></tr></thead>
+      <tbody>${loanRows}</tbody></table>
+    </section>
+    <section>
+      <h3>Alcancía</h3>
+      <div class="summary-line"><span>Aportado este mes</span><span class="val">${fmt(pigTotal)}</span></div>
+      <div class="summary-line"><span>Acumulado total</span><span class="val">${fmt(piggyTotal)}</span></div>
+    </section>
+    <section>
+      <h3>Hábitos: tabaco y bebidas</h3>
+      <div class="summary-line"><span>% de ingresos</span><span class="val">${vicePercent.toFixed(1)}%</span></div>
+    </section>
+    <section>
+      <h3>Saldo disponible</h3>
+      <div class="summary-line"><span>Ingresos &minus; gastos</span><span class="val ${saldo>=0?'saldo-pos':'saldo-neg'}">${fmt(saldo)}</span></div>
+    </section>
+    <section>
+      <h3>Balance honesto</h3>
+      <div class="critique">${critique}</div>
+    </section>
+  `;
+  const rep = document.getElementById("report");
+  rep.innerHTML = html;
+  rep.classList.add("show");
+  rep.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+document.getElementById("auditBtn").addEventListener("click", generateReport);
+
+// ==== Exportar / Importar (respaldo manual) ====
+document.getElementById("exportBtn").addEventListener("click", async ()=>{
+  const payload = {
+    exportado: new Date().toISOString(),
+    movimientos: allMovements,
+    prestamos: allLoans,
+    categorias: categories
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "auditor-financiero-backup-" + todayISO() + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("Archivo descargado.");
+});
+
+document.getElementById("importBtn").addEventListener("click", ()=>{
+  document.getElementById("importFile").click();
+});
+
+document.getElementById("importFile").addEventListener("change", async (ev)=>{
+  const file = ev.target.files[0];
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const payload = JSON.parse(text);
+    if(!payload.movimientos || !payload.categorias){
+      showToast("Ese archivo no parece un respaldo válido.");
+      return;
+    }
+    await storeClear("movimientos");
+    for(const m of payload.movimientos){ await storePut("movimientos", m); }
+    await storeClear("prestamos");
+    for(const p of (payload.prestamos||[])){ await storePut("prestamos", p); }
+    await storeClear("categorias");
+    for(const tipo of ["ingreso","gasto","ahorro"]){
+      for(const nombre of (payload.categorias[tipo]||[])){
+        await storePut("categorias", { key: tipo+":"+nombre, tipo, nombre });
+      }
+    }
+    await cargarTodo();
+    populateCategories();
+    renderCategories();
+    renderLoans();
+    renderEntries();
+    renderSummary();
+    showToast("Datos restaurados correctamente.");
+  }catch(e){
+    showToast("No se pudo leer ese archivo.");
+  }
+  ev.target.value = "";
+});
+
+async function init(){
+  await cargarTodo();
+  populateCategories();
+  renderCategories();
+  document.getElementById("monthPicker").value = currentMonth;
+  renderLoans();
+  renderEntries();
+  renderSummary();
+}
+init();
+</script>
+</body>
+</html>

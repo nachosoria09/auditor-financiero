@@ -2,11 +2,11 @@
 
 App para registrar ingresos, gastos, préstamos fijos y ahorros del mes, con cierre mensual automático (desglose por categoría, estado de préstamos, y evaluación honesta del mes).
 
-Los datos de cada usuario se guardan en **su propia Google Sheet** — nadie más los ve, ni siquiera quien comparte esta app.
+Los datos de cada usuario se guardan **en su propio dispositivo/navegador** (IndexedDB) — nadie más los ve, ni siquiera quien comparte esta app. No requiere cuenta ni configuración de ningún tipo.
 
 ## Usar la app
 
-👉 **[Abrir el Auditor Financiero](https://nachosoria09.github.io/auditor-financiero/)**
+👉 **[Abrir el Auditor Financiero](https://TUUSUARIO.github.io/NOMBRE-DEL-REPO/)**
 
 Antes de usarla por primera vez, seguí el manual:
 
@@ -14,6 +14,6 @@ Antes de usarla por primera vez, seguí el manual:
 
 ## Estructura del repositorio
 
-- `index.html` — la app (autocontenida, sin dependencias externas salvo Google Apps Script).
+- `index.html` — la app (totalmente autocontenida, sin dependencias externas de ningún tipo).
 - `manual.html` — el manual, como página navegable (con link de vuelta a la app).
 - `manual-auditor-financiero.md` — el mismo manual en Markdown, por si preferís editarlo como texto plano.
