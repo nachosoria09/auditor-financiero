@@ -6,7 +6,7 @@ Los datos de cada usuario se guardan **en su propio dispositivo/navegador** (Ind
 
 ## Usar la app
 
-👉 **[Abrir el Auditor Financiero](https://TUUSUARIO.github.io/NOMBRE-DEL-REPO/)**
+👉 **[Abrir el Auditor Financiero](https://nachosoria09.github.io/auditor-financiero/)**
 
 Antes de usarla por primera vez, seguí el manual:
 
